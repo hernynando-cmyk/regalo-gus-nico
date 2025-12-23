@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regalo de Navidad</title>
+
+  <style>
+    :root{
+      --bg1:#07121f;
+      --bg2:#0b2a2a;
+      --gold:#d9b45c;
+      --red:#b3122d;
+      --green:#0f6b3a;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:#fff;
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(217,180,92,.18), transparent 60%),
+        radial-gradient(900px 600px at 80% 20%, rgba(15,107,58,.16), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* ========= BACKGROUND LAYERS ========= */
+    #fireworks{
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      /* Subimos el layer para que se vea por encima del fondo pero debajo del UI */
+      z-index: 8;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .25s ease;
+      mix-blend-mode: screen;
+    }
+    #fireworks.show{ opacity: .9; }
+
+    .snow{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      opacity: .6;
+      background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.8) 50%, transparent 55%),
+        radial-gradient(2px 2px at 80px 70px, rgba(255,255,255,.7) 50%, transparent 55%),
+        radial-gradient(1px 1px at 140px 120px, rgba(255,255,255,.6) 50%, transparent 55%),
+        radial-gradient(2px 2px at 200px 10px, rgba(255,255,255,.75) 50%, transparent 55%),
+        radial-gradient(1px 1px at 260px 90px, rgba(255,255,255,.55) 50%, transparent 55%),
+        radial-gradient(2px 2px at 320px 150px, rgba(255,255,255,.8) 50%, transparent 55%);
+      background-size: 360px 200px;
+      animation: snowMove 10s linear infinite;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
+    }
+    @keyframes snowMove{
+      from{ transform: translateY(-10px); }
+      to{ transform: translateY(200px); }
+    }
+
+    /* ========= COMET ========= */
+    .comet{
+      position: fixed;
+      bottom: 140px;
+      left: -45%;
+      width: 280px;
+      height: 60px;
+      opacity: 0;
+      z-index: 3;
+      pointer-events: none;
+      transform: translate3d(0,0,0);
+    }
+    .comet.active{
+      animation: cometFly 16s linear infinite;
+    }
+    @keyframes cometFly{
+      0%{ left: -45%; opacity: 0; }
+      10%{ opacity: 1; }
+      90%{ opacity: 1; }
+      100%{ left: 120%; opacity: 0; }
+    }
+    .comet-core{
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fff6d0 35%, rgba(255,255,255,0) 72%);
+      box-shadow:
+        0 0 18px rgba(255,255,255,.95),
+        0 0 45px rgba(217,180,92,.85);
+      filter: blur(.1px);
+    }
+    .comet-tail{
+      position: absolute;
+      right: 30px;
+      top: 50%;
+      width: 240px;
+      height: 26px;
+      transform: translateY(-50%);
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.85));
+      clip-path: polygon(0 50%, 100% 0, 100% 100%);
+      filter: blur(1.2px);
+      opacity: .95;
+    }
+    .comet-glow{
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      width: 120px;
+      height: 120px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.22), rgba(217,180,92,.10), rgba(0,0,0,0) 70%);
+      filter: blur(6px);
+    }
+
+    /* ========= SCRIPTURE ========= */
+    .scripture{
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 900px;
+      width: calc(100% - 32px);
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 18px;
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.5;
+      opacity: 0;
+      z-index: 4;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,.4);
+    }
+    .scripture.show{
+      animation: fadeInUp .9s ease forwards;
+    }
+    @keyframes fadeInUp{
+      from{ opacity: 0; transform: translate(-50%, 12px); }
+      to{ opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* ========= LAYOUT ========= */
+    .wrap{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      padding:24px 16px 90px;
+      gap:18px;
+      position:relative;
+      z-index: 10;
+    }
+
+    .brand{
+      width:min(980px, 100%);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:10px 2px;
+      opacity:.95;
+    }
+
+    .brand .title{
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:clamp(18px, 3vw, 22px);
+    }
+
+    .brand .sub{
+      font-size:13px;
+      opacity:.85;
+    }
+
+    .pill{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 10px;
+      border-radius:999px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .pill button{
+      appearance:none;
+      border:0;
+      background:rgba(255,255,255,.12);
+      color:#fff;
+      padding:8px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:12px;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .pill button:hover{ transform: translateY(-1px); background:rgba(255,255,255,.18); }
+
+    .pill .status{
+      font-size:12px;
+      opacity:.9;
+      white-space:nowrap;
+    }
+
+    .hero{
+      width:min(1480px, 100%);
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap:24px;
+      align-items:stretch;
+    }
+    @media (max-width: 920px){
+      .hero{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background:rgba(255,255,255,.07);
+      padding:16px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(500px 280px at 10% 10%, rgba(217,180,92,.18), transparent 60%),
+        radial-gradient(500px 280px at 90% 30%, rgba(179,18,45,.18), transparent 60%);
+      opacity:.9;
+      z-index:0;
+    }
+    .panel > *{ position:relative; z-index:1; }
+
+    .ctaTitle{
+      font-size: clamp(22px, 3.4vw, 34px);
+      margin:0 0 6px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .ctaText{
+      margin:0 0 14px;
+      opacity:.9;
+      line-height:1.35;
+      font-size:14px;
+    }
+
+    /* ========= MAIN GIFT 3D ========= */
+    .giftStage{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      padding:12px 6px 10px 18px;
+      min-height:280px;
+    }
+
+    .giftBox{
+      width:min(300px, 70vw);
+      aspect-ratio: 1 / 1;
+      position:relative;
+      cursor:pointer;
+      transform-style: preserve-3d;
+      perspective: 900px;
+      transition: transform .2s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .giftBox:hover{
+      transform: rotateX(6deg) rotateY(-6deg) scale(1.02);
+    }
+
+    .boxBase{
+      position:absolute;
+      inset: 28% 10% 10% 10%;
+      background: linear-gradient(145deg, #b3122d, #7f0c1f);
+      border-radius: 18px;
+      box-shadow:
+        0 25px 50px rgba(0,0,0,.45),
+        inset 0 4px 6px rgba(255,255,255,.25);
+      transform: translateZ(20px);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+
+    .boxLid{
+      position:absolute;
+      inset: 14% 8% 64% 8%;
+      background: linear-gradient(145deg, #e01c42, #a80f28);
+      border-radius: 18px;
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.35),
+        inset 0 3px 4px rgba(255,255,255,.35);
+      transform-origin: left bottom;
+      transform: translateZ(40px);
+      transition: transform .6s cubic-bezier(.2,.9,.2,1);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+
+    .ribbonV{
+      position:absolute;
+      top:12%;
+      bottom:10%;
+      left:50%;
+      width:18%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #e8cf86, var(--gold));
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+    .ribbonH{
+      position:absolute;
+      left:10%;
+      right:10%;
+      top:50%;
+      height:18%;
+      transform: translateY(-50%);
+      background: linear-gradient(180deg, #f0dc9c, var(--gold));
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+
+    .bow{
+      position:absolute;
+      top:9%;
+      left:50%;
+      transform: translateX(-50%);
+      width:44%;
+      height:26%;
+    }
+    .bow::before, .bow::after{
+      content:"";
+      position:absolute;
+      top:20%;
+      width:48%;
+      height:60%;
+      background: linear-gradient(180deg, #f6e6b4, var(--gold));
+      border-radius: 60% 40% 60% 40%;
+      box-shadow: 0 12px 20px rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+    .bow::before{ left:0; transform: rotate(-12deg); }
+    .bow::after{ right:0; transform: rotate(12deg); }
+
+    .bowCenter{
+      position:absolute;
+      left:50%;
+      top:44%;
+      transform: translate(-50%, -50%);
+      width:18%;
+      height:26%;
+      background: linear-gradient(180deg, #f6e6b4, var(--gold));
+      border-radius: 10px;
+      box-shadow: 0 12px 18px rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+
+    .opened .boxLid{ transform: rotate(-32deg) translate(-18px, -12px) translateZ(40px); }
+    .opened .giftBox{ cursor:default; }
+
+    .tapHint{
+      margin-top:10px;
+      text-align:center;
+      font-size:13px;
+      opacity:.9;
+    }
+
+    .pulse{
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-4px); }
+    }
+
+    /* ========= RIGHT PANEL / GIFTS GRID ========= */
+    .rightPanel{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .progress{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:6px;
+    }
+
+    .meter{
+      flex:1;
+      min-width:200px;
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .meter > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(217,180,92,.9), rgba(255,255,255,.85));
+      transition: width .35s ease;
+    }
+
+        .grid{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(140px, 1fr));
+      grid-auto-rows: 78px;
+      gap:16px;
+      align-content:start;
+    }
+    @media (max-width: 1200px){
+      .grid{ grid-template-columns: repeat(4, minmax(140px, 1fr)); }
+    }
+    @media (max-width: 980px){
+      .hero{ grid-template-columns: 1fr; }
+      .grid{ grid-template-columns: repeat(3, minmax(140px, 1fr)); grid-auto-rows: 82px; }
+    }
+    @media (max-width: 520px){
+      .grid{ grid-template-columns: repeat(2, minmax(140px, 1fr)); grid-auto-rows: 84px; }
+    }
+
+    .miniGift{
+      position:relative;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:10px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      overflow:hidden;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      height: 64px;
+    }
+    .miniGift:hover{ transform: translateY(-1px); background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.18); }
+    .miniGift:active{ transform: translateY(0); }
+
+    .miniGift .label{
+      font-weight:900;
+      letter-spacing:.2px;
+      font-size:13px;
+      line-height:1.05;
+    }
+    .miniGift .state{
+      font-size:11px;
+      opacity:.82;
+      white-space:nowrap;
+    }
+
+    .miniIcon{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(179,18,45,.95), rgba(179,18,45,.7));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 20px rgba(0,0,0,.2);
+      position:relative;
+      flex:none;
+    }
+    .miniIcon::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:0;
+      bottom:0;
+      width:26%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, rgba(217,180,92,.95), rgba(217,180,92,.75));
+      border-radius:10px;
+    }
+    .miniIcon::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:50%;
+      height:26%;
+      transform: translateY(-50%);
+      background: linear-gradient(180deg, rgba(217,180,92,.95), rgba(217,180,92,.75));
+      border-radius:10px;
+    }
+
+    /* ========= PHOTO MODAL ========= */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: rgba(0,0,0,.65);
+      z-index: 50;
+    }
+    .modal.show{ display:flex; }
+
+    .polaroid{
+      width:min(720px, 95vw);
+      background:#ffffff;
+      color:#0b1220;
+      border-radius: 22px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+      transform: rotate(var(--rot, -1.2deg));
+      animation: popIn .18s ease-out;
+    }
+    @keyframes popIn{
+      from{ transform: translateY(8px) scale(.985) rotate(var(--rot, -1.2deg)); opacity:.85; }
+      to{ transform: translateY(0) scale(1) rotate(var(--rot, -1.2deg)); opacity:1; }
+    }
+    .polaroid img{
+      width:100%;
+      display:block;
+      height: min(62vh, 520px);
+      object-fit: cover;
+      background:#f3f5f7;
+    }
+    .caption{
+      padding:14px 16px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-top: 1px solid rgba(0,0,0,.08);
+    }
+    .caption .txt{
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .caption .btn{
+      appearance:none;
+      border:0;
+      background: rgba(11,18,32,.08);
+      color:#0b1220;
+      padding:10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight:800;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .caption .btn:hover{ transform: translateY(-1px); background: rgba(11,18,32,.12); }
+
+    /* ========= SPARKLES ========= */
+    .sparkle{
+      position:fixed;
+      width:8px;
+      height:8px;
+      border-radius:2px;
+      pointer-events:none;
+      z-index:40;
+      animation: fall 900ms ease-out forwards;
+      opacity:.95;
+    }
+    @keyframes fall{
+      from{ transform: translateY(-10px) rotate(0deg); opacity:1; }
+      to{ transform: translateY(90px) rotate(160deg); opacity:0; }
+    }
+  
+    /* ========= TOAST (MESSAGE) ========= */
+    .toastWrap{
+      position: fixed;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      z-index: 60;
+      width: min(720px, calc(100% - 28px));
+      pointer-events: none;
+    }
+    .toast{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.62);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 18px 45px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(-8px) scale(.99);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .toast .left{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      flex:1;
+      min-width: 0;
+    }
+    .toast .badge{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(217,180,92,.95), rgba(255,255,255,.25));
+      box-shadow: 0 12px 20px rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.14);
+      flex:none;
+      position:relative;
+    }
+    .toast .badge::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: rgba(179,18,45,.85);
+      box-shadow: 0 0 18px rgba(179,18,45,.45);
+    }
+    .toast .msg{
+      font-size: 13px;
+      line-height: 1.35;
+      opacity: .95;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .toast .meta{
+      font-weight: 900;
+      letter-spacing: .2px;
+      margin-bottom: 2px;
+      font-size: 12px;
+      opacity: .95;
+      white-space:nowrap;
+    }
+
+  </style>
+</head>
+
+<body>
+  <canvas id="fireworks" aria-hidden="true"></canvas>
+
+  <div class="toastWrap" aria-live="polite" aria-atomic="true">
+    <div class="toast" id="toast">
+      <div class="left">
+        <div class="badge" aria-hidden="true"></div>
+        <div style="min-width:0;">
+          <div class="meta" id="toastTitle">Mensaje</div>
+          <div class="msg" id="toastMsg">...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="comet" id="comet" aria-hidden="true">
+    <div class="comet-core"></div>
+    <div class="comet-tail"></div>
+    <div class="comet-glow"></div>
+  </div>
+
+  <div class="scripture" id="scripture">
+    Dios hizo todo hermoso en su momento, y puso en la mente humana el sentido del tiempo,
+    aun cuando el hombre no alcanza a comprender la obra que Dios realiza de principio a fin.<br>
+    <strong>(Eclesiastés 3:11)</strong>
+  </div>
+
+  <div class="snow" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="brand">
+      <div>
+        <div class="title">Navidad en modo sorpresa</div>
+        <div class="sub">Un regalo interactivo: abre cajas, descubre fotos y deja la música hacer lo suyo.</div>
+      </div>
+
+      <div class="pill">
+        <button id="btnMusic">Iniciar música</button>
+        <div class="status" id="musicStatus">Música: apagada</div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="panel" id="leftPanel">
+        <h1 class="ctaTitle">Toca para reclamar tu regalo</h1>
+        <p class="ctaText">
+          Consejo: empieza con la caja grande. Luego desbloquearás más regalos.
+        </p>
+
+        <div class="giftStage">
+          <div class="giftBox pulse" id="mainGift" role="button" aria-label="Abrir regalo principal" tabindex="0">
+            <div class="bow">
+              <div class="bowCenter"></div>
+            </div>
+            <div class="boxLid"></div>
+            <div class="boxBase">
+              <div class="ribbonV"></div>
+              <div class="ribbonH"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tapHint" id="hint">
+          <strong>Tip:</strong> toca/clic en la caja. La música arrancará en el primer clic.
+        </div>
+      </div>
+
+      <div class="panel rightPanel">
+        <div class="progress">
+          <div>
+            <div style="font-weight:900;">Progreso</div>
+            <div style="font-size:12px; opacity:.85;" id="progText">0 de 8 regalos abiertos</div>
+          </div>
+          <div class="meter" aria-label="Progreso de regalos abiertos">
+            <div id="meterFill"></div>
+          </div>
+        </div>
+
+        <div class="grid" id="giftGrid"></div>
+
+        <div class="bottomMsg" style="opacity:.85; font-size:12px; line-height:1.35; margin-top:8px;">
+          Porque yo sé muy bien los planes que tengo para ustedes —afirma el Señor—, planes de bienestar y no de calamidad,
+          a fin de darles un futuro y una esperanza. <strong>(Jeremías 29:11)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="polaroid" id="polaroid" style="--rot:-1.2deg;">
+      <img id="modalImg" alt="Foto del regalo" src="" />
+      <div class="caption">
+        <div class="txt" id="modalTitle">Regalo</div>
+        <button class="btn" id="btnClose">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="bgMusic" preload="auto" loop>
+    <source src="assets/music/navidad.mp3" type="audio/mpeg" />
+  </audio>
+
+  <audio id="sfxUnwrap" preload="auto">
+    <source src="assets/sfx/unwrap.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    // ============================
+    // CONFIG
+    // ============================
+    const photos = [
+      { src: "assets/photos/01.jpg", title: "Regalo #1" },
+      { src: "assets/photos/02.jpg", title: "Regalo #2" },
+      { src: "assets/photos/03.jpg", title: "Regalo #3" },
+      { src: "assets/photos/04.jpg", title: "Regalo #4" },
+      { src: "assets/photos/05.jpg", title: "Regalo #5" },
+      { src: "assets/photos/06.jpg", title: "Regalo #6" },
+      { src: "assets/photos/07.jpg", title: "Regalo #7" },
+      { src: "assets/photos/08.jpg", title: "Regalo #8" },
+      { src: "assets/photos/09.jpg", title: "Regalo #9" },
+      { src: "assets/photos/10.jpg", title: "Regalo #10" },
+      { src: "assets/photos/11.jpg", title: "Regalo #11" },
+      { src: "assets/photos/12.jpg", title: "Regalo #12" },
+      { src: "assets/photos/13.jpg", title: "Regalo #13" },
+      { src: "assets/photos/14.jpg", title: "Regalo #14" },
+      { src: "assets/photos/15.jpg", title: "Regalo #15" },
+      { src: "assets/photos/16.jpg", title: "Regalo #16" },
+      { src: "assets/photos/17.jpg", title: "Regalo #17" },
+      { src: "assets/photos/18.jpg", title: "Regalo #18" },
+      { src: "assets/photos/19.jpg", title: "Regalo #19" },
+      { src: "assets/photos/20.jpg", title: "Regalo #20" }
+    ];
+
+
+    // Mensajes por regalo (personalizables)
+    const giftMessages = [
+      "Este regalo fue preparado con mucho amor.",
+      "Un recuerdo especial para ti, de esos que no se compran: se viven.",
+      "Que esta sorpresa te recuerde lo valioso que eres para nosotros.",
+      "Un detalle pequeño con intención grande: verte feliz.",
+      "Que Dios te llene de paz y de buenas noticias.",
+      "Una foto, un momento, una historia. Gracias por estar.",
+      "Para que nunca falten razones para sonreír.",
+      "Porque lo mejor de la vida se comparte.",
+      "Que tu casa se llene de alegría y esperanza.",
+      "Hoy celebramos familia, fe y gratitud.",
+      "Que este regalo te abrace el corazón.",
+      "Una chispa de amor, convertida en recuerdo.",
+      "Dios va delante de ti, abriendo camino.",
+      "Que tu fin de año cierre con bendición.",
+      "Gracias por cada apoyo, cada palabra, cada gesto.",
+      "Que tu próximo año sea de salud y prosperidad.",
+      "Un regalo para el alma: memoria y cariño.",
+      "Que lo mejor esté por venir.",
+      "Feliz Navidad: que la luz no falte en tu vida.",
+      "Cierra los ojos, pide un deseo y sigue creyendo."
+    ];
+
+    // SFX: si agregas más audios en assets/sfx/, los puedes listar aquí.
+    const unwrapSfxSources = [
+      "assets/sfx/unwrap.mp3"
+      // "assets/sfx/unwrap2.mp3",
+      // "assets/sfx/unwrap3.mp3"
+    ];
+
+    // ============================
+    // State
+    // ============================
+    const state = {
+      mainOpened: false,
+      opened: new Set(),
+      musicOn: false
+    };
+
+    // Elements
+    const mainGift = document.getElementById("mainGift");
+    const leftPanel = document.getElementById("leftPanel");
+    const hint = document.getElementById("hint");
+
+    const giftGrid = document.getElementById("giftGrid");
+    const progText = document.getElementById("progText");
+    const meterFill = document.getElementById("meterFill");
+
+    const modal = document.getElementById("modal");
+    const polaroid = document.getElementById("polaroid");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const btnClose = document.getElementById("btnClose");
+
+    const bgMusic = document.getElementById("bgMusic");
+    const sfxUnwrap = document.getElementById("sfxUnwrap");
+    const btnMusic = document.getElementById("btnMusic");
+    const musicStatus = document.getElementById("musicStatus");
+
+    const comet = document.getElementById("comet");
+    const scripture = document.getElementById("scripture");
+
+    // Toast
+    const toast = document.getElementById("toast");
+    const toastTitle = document.getElementById("toastTitle");
+    const toastMsg = document.getElementById("toastMsg");
+    let toastTimer = null;
+
+    // Fireworks canvas
+    const fwCanvas = document.getElementById("fireworks");
+    const fwCtx = fwCanvas ? fwCanvas.getContext("2d") : null;
+    let fwW = 0;
+    let fwH = 0;
+    let fwParticles = [];
+    let fwRunning = false;
+    let fwFadeTimer = null;
+
+    // ============================
+    // Helpers
+    // ============================
+    function setProgress() {
+      const total = photos.length;
+      const opened = state.opened.size;
+      progText.textContent = `${opened} de ${total} regalos abiertos`;
+      meterFill.style.width = `${Math.round((opened / total) * 100)}%`;
+    }
+
+    function showToast(title, message, ms = 2600) {
+      if (!toast) return;
+      clearTimeout(toastTimer);
+
+      toastTitle.textContent = title || "Mensaje";
+      toastMsg.textContent = message || "";
+
+      toast.classList.add("show");
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, ms);
+    }
+
+    function sparkleBurst(x, y, n = 18) {
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement("div");
+        s.className = "sparkle";
+        s.style.left = (x + (Math.random() * 40 - 20)) + "px";
+        s.style.top = (y + (Math.random() * 18 - 10)) + "px";
+        const colors = ["#ffffff", "#d9b45c", "#b3122d", "#0f6b3a"];
+        s.style.background = colors[Math.floor(Math.random() * colors.length)];
+        s.style.width = (6 + Math.random() * 6) + "px";
+        s.style.height = (6 + Math.random() * 6) + "px";
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 950);
+      }
+    }
+
+    function openModal(photo, index) {
+      const rot = (Math.random() * 3.2 - 1.6).toFixed(2) + "deg";
+      polaroid.style.setProperty("--rot", rot);
+      modalImg.src = photo.src;
+      modalTitle.textContent = photo.title || `Regalo #${index + 1}`;
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+      modalImg.src = "";
+    }
+
+    function playUnwrapSfx() {
+      try {
+        // Selecciona un SFX (si existe más de uno en unwrapSfxSources)
+        const pick = unwrapSfxSources[Math.floor(Math.random() * unwrapSfxSources.length)];
+        const srcEl = sfxUnwrap.querySelector("source");
+        if (srcEl && srcEl.getAttribute("src") !== pick) {
+          srcEl.setAttribute("src", pick);
+          sfxUnwrap.load();
+        }
+
+        sfxUnwrap.currentTime = 0;
+        sfxUnwrap.play();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    async function ensureMusicOn() {
+      if (state.musicOn && !bgMusic.paused) return;
+
+      try {
+        await bgMusic.play();
+        state.musicOn = true;
+        musicStatus.textContent = "Música: encendida";
+        btnMusic.textContent = "Pausar música";
+      } catch (e) {
+        musicStatus.textContent = "Música: toca para iniciar";
+      }
+    }
+
+    function toggleMusic() {
+      if (!state.musicOn) {
+        ensureMusicOn();
+        return;
+      }
+
+      if (bgMusic.paused) {
+        bgMusic.play();
+        musicStatus.textContent = "Música: encendida";
+        btnMusic.textContent = "Pausar música";
+      } else {
+        bgMusic.pause();
+        musicStatus.textContent = "Música: pausada";
+        btnMusic.textContent = "Reanudar música";
+      }
+    }
+
+    // ============================
+    // Fireworks (Canvas)
+    // ============================
+    function fwResize() {
+      if (!fwCanvas || !fwCtx) return;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      fwW = Math.floor(window.innerWidth);
+      fwH = Math.floor(window.innerHeight);
+      fwCanvas.width = Math.floor(fwW * dpr);
+      fwCanvas.height = Math.floor(fwH * dpr);
+      fwCanvas.style.width = fwW + "px";
+      fwCanvas.style.height = fwH + "px";
+      fwCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function fwBurst(x, y) {
+      if (!fwCanvas || !fwCtx) return;
+
+      const palette = ["#ffffff", "#ffd700", "#ff2d55", "#00ffcc", "#fff6d0"];
+      const count = 90 + Math.floor(Math.random() * 40);
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.2 + Math.random() * 4.4;
+
+        fwParticles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          decay: 0.008 + Math.random() * 0.012,
+          size: 2.5 + Math.random() * 4.5,
+          color: palette[Math.floor(Math.random() * palette.length)],
+          gravity: 0.035 + Math.random() * 0.03
+        });
+      }
+
+      fwCanvas.classList.add("show");
+
+      if (!fwRunning) {
+        fwRunning = true;
+        requestAnimationFrame(fwTick);
+      }
+
+      clearTimeout(fwFadeTimer);
+      fwFadeTimer = setTimeout(() => {
+        fwCanvas.classList.remove("show");
+      }, 1800);
+    }
+
+    function fwTick() {
+      if (!fwCanvas || !fwCtx) return;
+
+      fwCtx.clearRect(0, 0, fwW, fwH);
+      fwCtx.globalCompositeOperation = "source-over";
+
+      const next = [];
+      for (let i = 0; i < fwParticles.length; i++) {
+        const p = fwParticles[i];
+
+        p.vy += p.gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+
+        if (p.life <= 0) continue;
+
+        fwCtx.globalAlpha = Math.max(0, p.life);
+        fwCtx.shadowBlur = 18;
+        fwCtx.shadowColor = p.color;
+        fwCtx.beginPath();
+        fwCtx.fillStyle = p.color;
+        fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        fwCtx.fill();
+        fwCtx.shadowBlur = 0;
+
+        next.push(p);
+      }
+
+      fwParticles = next;
+      fwCtx.globalAlpha = 1;
+      fwCtx.globalCompositeOperation = "source-over";
+
+      if (fwParticles.length > 0 || fwCanvas.classList.contains("show")) {
+        requestAnimationFrame(fwTick);
+      } else {
+        fwRunning = false;
+      }
+    }
+
+    // ============================
+    // Comet particles (loop-safe)
+    // ============================
+    let cometParticlesRunning = false;
+
+    function cometParticlesLoop() {
+      if (cometParticlesRunning) return;
+      cometParticlesRunning = true;
+
+      function tick() {
+        if (!comet.classList.contains("active")) {
+          cometParticlesRunning = false;
+          return;
+        }
+
+        const rect = comet.getBoundingClientRect();
+        const x = rect.left + rect.width - 24;
+        const y = rect.top + rect.height / 2;
+
+        const count = 1 + Math.floor(Math.random() * 2);
+
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement("div");
+          p.className = "sparkle";
+          p.style.left = (x + (Math.random() * 10 - 5)) + "px";
+          p.style.top = (y + (Math.random() * 18 - 9)) + "px";
+
+          const colors = ["#ffffff", "#fff6d0", "#d9b45c"];
+          p.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+          const size = 3 + Math.random() * 4;
+          p.style.width = size + "px";
+          p.style.height = size + "px";
+          p.style.borderRadius = "50%";
+
+          document.body.appendChild(p);
+          setTimeout(() => p.remove(), 900);
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    // ============================
+    // UI rendering
+    // ============================
+    function renderGifts() {
+      giftGrid.innerHTML = "";
+
+      photos.forEach((p, i) => {
+        const card = document.createElement("div");
+        card.className = "miniGift";
+        card.dataset.index = String(i);
+
+        const isOpen = state.opened.has(i);
+
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+            <div class="miniIcon" aria-hidden="true"></div>
+            <div style="display:flex; flex-direction:column; line-height:1.05;">
+              <div class="label">Regalo ${i + 1}</div>
+              <div class="state">${isOpen ? "Abierto" : "Cerrado"}</div>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener("click", async (ev) => {
+          if (!state.mainOpened) {
+            hint.innerHTML = "<strong>Primero</strong> abre la caja grande para desbloquear los regalos.";
+            showToast("Acceso bloqueado", "Abre la caja grande para habilitar los regalos.");
+            sparkleBurst(ev.clientX || (window.innerWidth / 2), ev.clientY || (window.innerHeight / 2), 10);
+            return;
+          }
+
+          playUnwrapSfx();
+
+          // Fireworks "pumm" on each gift open
+          fwBurst(ev.clientX || (window.innerWidth / 2), ev.clientY || (window.innerHeight / 2));
+
+          state.opened.add(i);
+          setProgress();
+          renderGifts();
+
+          const rect = card.getBoundingClientRect();
+          // Efectos livianos para evitar lag
+          if (state.opened.size <= 3) {
+            sparkleBurst(rect.left + rect.width / 2, rect.top + 12, 10);
+          }
+
+          showToast(`Regalo ${i + 1} desbloqueado`, giftMessages[i] || "Disfruta este detalle.");
+
+          openModal(p, i);
+        });
+
+        giftGrid.appendChild(card);
+      });
+    }
+
+    // ============================
+    // Init
+    // ============================
+    window.addEventListener("resize", fwResize);
+    fwResize();
+
+    renderGifts();
+    setProgress();
+
+    // Main gift open
+    async function openMainGift(ev) {
+      if (state.mainOpened) return;
+
+      await ensureMusicOn();
+      playUnwrapSfx();
+
+      state.mainOpened = true;
+      leftPanel.classList.add("opened");
+      mainGift.classList.remove("pulse");
+      mainGift.setAttribute("aria-label", "Regalo principal abierto");
+
+      const x = ev?.clientX ?? (window.innerWidth / 2);
+      const y = ev?.clientY ?? (window.innerHeight / 2);
+      sparkleBurst(x, y, 28);
+
+      comet.classList.add("active");
+      cometParticlesLoop();
+
+      hint.innerHTML =
+        "<strong>Feliz Navidad.</strong> Que Dios Todopoderoso los cuide, los proteja y los bendiga siempre.<br><br>" +
+        "Ahora sí: <strong>abre cada regalo</strong>; en cada uno encontrarás una sorpresa hecha con mucho cariño.";
+
+      setTimeout(() => {
+        scripture.classList.add("show");
+      }, 1200);
+
+      showToast("Regalo principal abierto", "Listo. Ahora puedes abrir los 20 regalos.");
+      fwBurst(window.innerWidth / 2, window.innerHeight / 2);
+      setTimeout(() => fwBurst(window.innerWidth * 0.35, window.innerHeight * 0.38), 180);
+      setTimeout(() => fwBurst(window.innerWidth * 0.65, window.innerHeight * 0.42), 320);
+    }
+
+    mainGift.addEventListener("click", openMainGift);
+    mainGift.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") openMainGift(e);
+    });
+
+    // Music button
+    btnMusic.addEventListener("click", toggleMusic);
+
+    // Modal close
+    btnClose.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    // Preload images (best effort)
+    photos.forEach(p => {
+      const img = new Image();
+      img.src = p.src;
+    });
+  </script>
+</body>
+</html>
